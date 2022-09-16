@@ -20,6 +20,7 @@ Consider the following and implement reasonable solutions for the following prob
 
 
 How to handle HTTP 404 errors?
+Try catch performed in line 40 to catch if it's not 200 and displays the status code.
 
 How to make the download process faster?
 
@@ -28,3 +29,19 @@ How to display the progress of downloads?
 How to handle cancellation? (i.e., the user presses CTRL+C)
 
 Optional: How to handle retry in case of intermittent network errors?
+
+INSTALLATION:
+
+We assume you've got pip installed and python 3.8 or higher, the SO used is ubuntu but there shoulnd't be any problemns using another SO.
+    
+    To install & setup the virtual environment:
+        - pip3 install virtualenv
+        - python3.8 -m venv env
+        - source env/bin/activate
+        - pip list (to check it's working)
+    
+    Another pip packages once the virtual env is installed:
+        - pip install requests
+
+Finally you can just run the command: 
+    - python download_files/download_files.py
