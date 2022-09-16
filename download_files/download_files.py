@@ -2,7 +2,7 @@ import os
 import asyncio
 import aiohttp
 import aiofiles
-import sys
+import tqdm
 
 class Genie:
     def __init__(self):
@@ -19,20 +19,22 @@ class Genie:
         asyncio.run(self.download_images(lines))
 
     async def download_images(self, lines):
-        directory = self.create_dir()
-        async with aiohttp.ClientSession() as session:
-            for image in lines:
-                # Handle when a directory already e
-                path = directory +"/"+f"{image.rsplit('/', 1)[-1]}.png"
-                async with session.get(str(image), headers=self.headers) as response:
-                    print("response---> ", response)
-                    self.raise_except_if_not_200(response)
-                    await self.save_images(path, response)
-    
-    async def save_images(self, path, request_img):
-        f = await aiofiles.open(path, mode='wb')
-        await f.write(await request_img.read())
-        await f.close()
+        dir = self.create_dir()
+        async with aiohttp.ClientSession(auto_decompress=False) as session:
+            tasks = [asyncio.ensure_future(self.save_images(session, dir, image_url)) for image_url in lines]
+            [
+                await f for f 
+                in tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks))
+            ]
+            await asyncio.gather(*tasks)
+
+    async def save_images(self, session, dir, resp_img):
+        path = dir +"/"+f"{resp_img.rsplit('/', 1)[-1]}.png"
+        async with session.get(str(resp_img), headers=self.headers) as response:
+            self.raise_except_if_not_200(response)
+            f = await aiofiles.open(path, mode='wb')
+            await f.write(await response.read())
+            await f.close()
 
     def create_dir(self):
         print("\nPlease input the name of the folder to save the files:")

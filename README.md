@@ -27,6 +27,7 @@ How to make the download process faster?
 https://betterprogramming.pub/asynchronous-programming-in-python-for-making-more-api-calls-faster-419a1d2ee058
 
 How to display the progress of downloads?
+Using asyncio.as_completed to display the tasks finished because to optimise the download we are using asynchronously aiohttp.ClientSession.
 
 How to handle cancellation? (i.e., the user presses CTRL+C)
 
@@ -46,6 +47,8 @@ We assume you've got pip installed and python 3.8 or higher, the SO used is ubun
         - pip install requests
         - pip install aiohttp
         - pip install aiofiles
+        - pip install tqdm
+        - pip install multidict
 
 Finally you can just run the command: 
     - python download_files/download_files.py
