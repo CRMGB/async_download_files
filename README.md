@@ -20,9 +20,11 @@ Consider the following and implement reasonable solutions for the following prob
 
 
 How to handle HTTP 404 errors?
-Try catch performed in line 40 to catch if it's not 200 and displays the status code.
+- Try catch performed in line 40 to catch if it's not 200 and displays the status code.
 
 How to make the download process faster?
+- Using the asyncronous libraries asyncio, aiohttp and aiofiles mentioned bellow to install. more details: 
+https://betterprogramming.pub/asynchronous-programming-in-python-for-making-more-api-calls-faster-419a1d2ee058
 
 How to display the progress of downloads?
 
@@ -42,6 +44,8 @@ We assume you've got pip installed and python 3.8 or higher, the SO used is ubun
     
     Another pip packages once the virtual env is installed:
         - pip install requests
+        - pip install aiohttp
+        - pip install aiofiles
 
 Finally you can just run the command: 
     - python download_files/download_files.py

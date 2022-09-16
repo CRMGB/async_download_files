@@ -1,8 +1,8 @@
-from doctest import Example
-import requests
 import os
 import asyncio
-import time
+import aiohttp
+import aiofiles
+import sys
 
 class Genie:
     def __init__(self):
@@ -16,33 +16,40 @@ class Genie:
                 lines = f.readlines()
         except ValueError:
             print("Error reading the file.")
-        self.download_images(lines)
+        asyncio.run(self.download_images(lines))
 
-    def download_images(self, lines):
-        print("\nPlease input the name of the folder to save the files:")
-        down_dir = input()
-        directory = self.create_dir(down_dir)
-        for image in lines:
-            path = directory +"/"+f"{image.rsplit('/', 1)[-1]}.png"
-            request_img = requests.get(str(image), headers=self.headers)
-            try:
-                if request_img.status_code != 200:
-                    raise ValueError(f"status code: {request_img.status_code}")
-            except ValueError as err:
-                print(f"There was a problem trying to download the image, {err}")
-            self.save_images(path, request_img)
+    async def download_images(self, lines):
+        directory = self.create_dir()
+        async with aiohttp.ClientSession() as session:
+            for image in lines:
+                # Handle when a directory already e
+                path = directory +"/"+f"{image.rsplit('/', 1)[-1]}.png"
+                async with session.get(str(image), headers=self.headers) as response:
+                    print("response---> ", response)
+                    self.raise_except_if_not_200(response)
+                    await self.save_images(path, response)
     
-    def save_images(self, path, request_img):
-        with open(path,'wb') as f:  
-            f.write(request_img.content)
+    async def save_images(self, path, request_img):
+        f = await aiofiles.open(path, mode='wb')
+        await f.write(await request_img.read())
+        await f.close()
 
-
-    def create_dir(self, down_dir):
+    def create_dir(self):
+        print("\nPlease input the name of the folder to save the files:")
+        down_dir = input()        
         if not os.path.exists(down_dir):
             os.mkdir(down_dir)
             print("Directory " , down_dir ,  " Created ")
             return down_dir
-        else:    
-            print("Directory " , down_dir ,  " already exists")
+        else:
+            print(f"INFO: the directory already exists, will write to: {down_dir}")
+        return down_dir
+
+    def raise_except_if_not_200(self, response):
+        try:
+            if response.status != 200:
+                raise ValueError(f"status code: {response.status}")
+        except ValueError as err:
+            print(f"ERROR! There was a problem trying to download the image, {err}")
 
 init = Genie()
