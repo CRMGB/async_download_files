@@ -3,11 +3,14 @@ import asyncio
 import aiohttp
 import aiofiles
 import tqdm
+from retry_connection import retry
 
 class Genie:
     def __init__(self):
         self.full_path = os.path.abspath("download_files")
-        self.headers = {'User-Agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"}
+        self.headers = {
+            'User-Agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
+        }
         self.read_text_file()
 
     def read_text_file(self):
@@ -16,28 +19,49 @@ class Genie:
                 lines = f.readlines()
         except ValueError:
             print("Error reading the file.")
-        asyncio.run(self.download_images(lines))
-
-    async def download_images(self, lines):
         dir = self.create_dir()
-        async with aiohttp.ClientSession(auto_decompress=False) as session:
-            tasks = [asyncio.ensure_future(self.save_images(session, dir, image_url)) for image_url in lines]
-            [
-                await f for f 
-                in tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks))
-            ]
-            await asyncio.gather(*tasks)
+        asyncio.run(self.download_images(lines, dir))
 
+    @retry(
+        aiohttp.ServerDisconnectedError, aiohttp.ClientError,
+        aiohttp.ClientHttpProxyError
+    )
+    async def download_images(self, lines, dir):
+        """Main method to download where aiohttp and asyncio are doing the job.
+        we're relying on task for every file we download.
+        """
+        async with aiohttp.ClientSession() as session:
+            tasks = [
+                asyncio.ensure_future(self.save_images(session, dir, image_url)) 
+                for image_url in lines
+            ]
+            try:
+                [
+                    await f for f 
+                    in tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks))
+                ]
+                await asyncio.gather(*tasks)
+                print("Downloas terminated!")
+            except KeyboardInterrupt:
+                print("Received exit by CTRL+C, exiting")
+    
     async def save_images(self, session, dir, resp_img):
+        """ Method which will make the async request. It will call the method 
+        raise_except_if_not_200 if the response is not 200 as the name shows.
+        """
         path = dir +"/"+f"{resp_img.rsplit('/', 1)[-1]}.png"
         async with session.get(str(resp_img), headers=self.headers) as response:
             self.raise_except_if_not_200(response)
             f = await aiofiles.open(path, mode='wb')
             await f.write(await response.read())
-            await f.close()
+            await f.close()      
 
     def create_dir(self):
-        print("\nPlease input the name of the folder to save the files:")
+        """ Sinple method just to create a directory for the user to save the
+        files. I would improve it asking to the user for deletion of older 
+        folders+files and able to select which file to download.
+        """
+        print("\nPlease input the name of the folder to save the files to:")
         down_dir = input()        
         if not os.path.exists(down_dir):
             os.mkdir(down_dir)
