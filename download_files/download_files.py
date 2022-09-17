@@ -22,10 +22,6 @@ class Genie:
         dir = self.create_dir()
         asyncio.run(self.download_images(lines, dir))
 
-    @retry(
-        aiohttp.ServerDisconnectedError, aiohttp.ClientError,
-        aiohttp.ClientHttpProxyError
-    )
     async def download_images(self, lines, dir):
         """Main method to download where aiohttp and asyncio are doing the job.
         we're relying on task for every file we download.
@@ -41,17 +37,21 @@ class Genie:
                     in tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks))
                 ]
                 await asyncio.gather(*tasks)
-                print("Downloas terminated!")
+                print("Download terminated!")
             except KeyboardInterrupt:
                 print("Received exit by CTRL+C, exiting")
-    
+
+    @retry(
+        aiohttp.ServerDisconnectedError, aiohttp.ClientError,
+        aiohttp.ClientHttpProxyError
+    )
     async def save_images(self, session, dir, resp_img):
         """ Method which will make the async request. It will call the method 
         raise_except_if_not_200 if the response is not 200 as the name shows.
         """
         path = dir +"/"+f"{resp_img.rsplit('/', 1)[-1]}.png"
         async with session.get(str(resp_img), headers=self.headers) as response:
-            self.raise_except_if_not_200(response)
+            await self.raise_except_if_not_200(response)
             f = await aiofiles.open(path, mode='wb')
             await f.write(await response.read())
             await f.close()      
@@ -71,11 +71,11 @@ class Genie:
             print(f"INFO: the directory already exists, will write to: {down_dir}")
         return down_dir
 
-    def raise_except_if_not_200(self, response):
+    async def raise_except_if_not_200(self, response):
         try:
             if response.status != 200:
                 raise ValueError(f"status code: {response.status}")
-        except ValueError as err:
-            print(f"ERROR! There was a problem trying to download the image, {err}")
+        except asyncio.CancelledError as e:
+            print(f"ERROR! There was a problem trying to download the image: {response.status}")
 
 init = Genie()

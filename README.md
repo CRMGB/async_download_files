@@ -44,6 +44,9 @@ We assume you've got pip installed and python 3.8 or higher, the SO used is ubun
         - python3.8 -m venv env
         - source env/bin/activate
         - pip list (to check it's working)
+
+    You can either way install dependencies with pip (as explained bellow) or just with the requirements file:
+        - pip install -r requirements.txt
     
     Another pip packages once the virtual env is installed:
         - pip install requests
