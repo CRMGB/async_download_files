@@ -3,18 +3,23 @@ import asyncio
 import aiohttp
 import aiofiles
 import tqdm
-from download_files.retry_connection import retry
+from download_files.retry_connection.retry_connection import retry
 
 class Genie:
     def __init__(self):
-        self.full_path = os.path.abspath("download_files")
         self.headers = {
             'User-Agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
         }
+        self.file_urls = os.path.abspath("download_files/file_urls/images_to_download.txt")
 
-    def read_text_file(self):
+    def read_text_file(self, file=None):
+        """ Simple method to read the file with the urls in them.
+        For the purpose of testing we might pass the file it as a parameter.
+        """
         try:
-            with open(self.full_path+"/images_to_download.txt") as f:
+            if file != None:
+                self.file_urls = file
+            with open(self.file_urls) as f:
                 lines = f.readlines()
         except ValueError:
             print("Error reading the file.")
