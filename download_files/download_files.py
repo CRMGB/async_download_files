@@ -3,7 +3,7 @@ import asyncio
 import aiohttp
 import aiofiles
 import tqdm
-from retry_connection import retry
+from download_files.retry_connection import retry
 
 class Genie:
     def __init__(self):
@@ -11,7 +11,6 @@ class Genie:
         self.headers = {
             'User-Agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
         }
-        self.read_text_file()
 
     def read_text_file(self):
         try:
@@ -78,4 +77,7 @@ class Genie:
         except asyncio.CancelledError as e:
             print(f"ERROR! There was a problem trying to download the image: {response.status}")
 
-init = Genie()
+
+if __name__ == '__main__':
+    init = Genie()
+    init.read_text_file()
