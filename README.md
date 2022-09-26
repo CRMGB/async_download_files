@@ -54,6 +54,11 @@ We assume you've got pip installed and python 3.8 or higher, the SO used is ubun
         - pip install aiofiles
         - pip install tqdm
         - pip install multidict
+    
+    For the unittests:
+        - pip install unittest
+        - pip install mock
+        - to run the tests: python -m unittest tests.test_download_files
 
 Finally you can just run the command: 
-    - python download_files/download_files.py
+    - python -m download_files.download_files
